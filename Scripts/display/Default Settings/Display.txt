@@ -1,9 +1,0 @@
-{
-  "window": "half",
-  "dark_background_colour": "#001325",
-  "dark_foreground_colour": "#FFFFFF",
-  "light_background_colour": "#FFFFFF",
-  "light_foreground_colour": "#000000",
-  "dark": true,
-  "grid_buffer": 100
-}

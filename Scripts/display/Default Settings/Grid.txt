@@ -1,0 +1,3 @@
+{
+	"font_height_width_ratio": 1.5
+}

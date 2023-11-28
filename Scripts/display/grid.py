@@ -1,55 +1,151 @@
-import math
-
-import numpy as np
+import tkinter as tk
+from itertools import accumulate
 
 from hgutilities import defaults
+import numpy as np
 
 class Grid():
 
     def __init__(self, display):
         self.display = display
-        self.inherit_from_display()
+        self.problem = display.problem
+        self.canvas = display.canvas
+        self.inherit_window_parameters()
 
-    def inherit_from_display(self):
-        attributes = ["nonogram", "window", "canvas",
-                      "window_height", "window_width",
-                      "grid_buffer", "foreground_colour"]
-        defaults.inherit(self, self.display, attributes)
+    def inherit_window_parameters(self):
+        self.window_width = self.display.window_width
+        self.window_height = self.display.window_height
+        self.window_buffer_x = round(self.window_width * self.display.window_buffer_x_ratio)
+        self.window_buffer_y = round(self.window_height * self.display.window_buffer_y_ratio)
+
+    def draw_grid_and_labels(self):
+        self.set_label_lengths()
+        self.set_grid_size_constants()
+        self.draw_labels()
+        self.draw_grid()
+
+    def set_label_lengths(self):
+        self.vertical_label_length = max([len(label) for label in self.problem.column_data])
+        self.horizontal_label_length = max([len(label) for label in self.problem.row_data])
+
+    def set_grid_size_constants(self):
+        self.set_label_lengths()
+        self.set_cell_size()
+        self.set_display_sizes()
+        self.set_grid_reference_coordinates()
+        self.set_grid_ends()
+
+    def set_cell_size(self):
+        cell_width = self.get_potential_cell_width()
+        cell_height = self.get_potential_cell_height()
+        self.set_slack_direction_from_cell_dimensions(cell_width, cell_height)
+        self.cell_size = int(min(cell_width, cell_height))
+        self.set_font_kwargs()
+
+    def get_potential_cell_width(self):
+        allocated_width = self.window_width - 2*self.window_buffer_x
+        numerator = allocated_width * self.font_height_width_ratio
+        denominator = self.problem.width*self.font_height_width_ratio + self.horizontal_label_length*self.display.text_ratio
+        cell_width = numerator / denominator
+        return cell_width
+
+    def get_potential_cell_height(self):
+        allocated_height = self.window_height - 2*self.window_buffer_y
+        numerator = allocated_height * self.font_height_width_ratio
+        denominator = self.problem.height*self.font_height_width_ratio + self.vertical_label_length * self.font_height_width_ratio
+        cell_height = numerator / denominator
+        return cell_height
+
+    def set_slack_direction_from_cell_dimensions(self, cell_width, cell_height):
+        if cell_width >= cell_height:
+            self.slack_direction = "Horizontal"
+        else:
+            self.slack_direction = "Vertical"
+
+    def set_font_kwargs(self):
+        self.display.font_size = round(3 * self.display.text_ratio * self.cell_size / 4)
+        self.display.font_kwargs = {"font": (self.display.font_style, self.display.font_size),
+                                    "fill": self.display.colour}
+
+    def set_display_sizes(self):
+        self.set_grid_dimensions()
+        self.set_label_sizes()
+
+    def set_grid_dimensions(self):
+        self.grid_width = self.problem.width * self.cell_size
+        self.grid_height = self.problem.height * self.cell_size
+
+    def set_label_sizes(self):
+        self.labels_width = self.cell_size * self.display.text_ratio * self.horizontal_label_length / self.font_height_width_ratio
+        self.labels_height = self.cell_size * self.vertical_label_length
+
+    def set_grid_reference_coordinates(self):
+        if self.slack_direction == "Horizontal":
+            self.set_grid_reference_coordinates_horizontal()
+        else:
+            self.set_grid_reference_coordinates_vertical()
+
+    def set_grid_reference_coordinates_horizontal(self):
+        self.grid_reference_x = int((self.window_width + self.labels_width - self.grid_width)/2)
+        self.grid_reference_y = self.window_buffer_y + self.labels_height
+
+    def set_grid_reference_coordinates_vertical(self):
+        self.grid_reference_x = self.window_buffer_x + self.labels_width
+        self.grid_reference_y = int((self.window_height + self.labels_height - self.grid_height)/2)
+
+    def set_grid_ends(self):
+        self.x_end = self.grid_reference_x + self.grid_width
+        self.y_end = self.grid_reference_y + self.grid_height
+
+
+    def draw_labels(self):
+        self.draw_row_labels()
+        self.draw_column_labels()
+
+    def draw_row_labels(self):
+        for row_index, label in enumerate(self.problem.row_data):
+            self.draw_row_label(row_index, label)
+
+    def draw_row_label(self, index, label):
+        x_position = self.grid_reference_x - int(self.cell_size / 2)
+        y_position = self.grid_reference_y + int((index + 1/2) * self.cell_size)
+        self.canvas.create_text(x_position, y_position, text=label,
+                                anchor="e", **self.display.font_kwargs)
+
+    def draw_column_labels(self):
+        for column_index, label_set in enumerate(self.problem.column_data):
+            for index, label in enumerate(label_set):
+                inverted_index = len(label_set) - index - 1
+                self.draw_column_label(column_index, inverted_index, label)
+
+    def draw_column_label(self, column_index, index, label):
+        x_position = self.grid_reference_x + int((column_index + 1/2) * self.cell_size)
+        y_position = self.grid_reference_y - int((index + 1/2) * self.cell_size)
+        self.canvas.create_text(x_position, y_position, text=label,
+                                anchor="w", **self.display.font_kwargs)
 
     def draw_grid(self):
-        self.set_grid_parameters()
-        self.draw_thin_lines()
+        self.draw_vertical_lines()
+        self.draw_horizontal_lines()
 
-    def set_grid_parameters(self):
-        self.grid_size = self.window_height - 2 * self.grid_buffer
-        self.cell_size = self.grid_size / self.nonogram.size
-        self.left_edge = (self.window_width - self.grid_size) / 2
-        self.right_edge = self.left_edge + self.grid_size
-        self.top_edge = self.grid_buffer
-        self.bottom_edge = self.top_edge + self.grid_size
-    
-    def draw_thin_lines(self):
-        self.draw_thin_lines_horizontal()
-        self.draw_thin_lines_vertical()
+    def draw_vertical_lines(self):
+        for column_index in range(self.problem.width + 1):
+            x_position = self.grid_reference_x + int(column_index * self.cell_size)
+            self.draw_vertical_line(x_position)
 
-    def draw_thin_lines_horizontal(self):
-        line_positions = np.arange(self.nonogram.size + 1)
-        for line_position in line_positions:
-            y_position = self.top_edge + line_position * self.cell_size
-            self.draw_thin_horizontal_line(y_position)
+    def draw_vertical_line(self, x_position):
+        self.canvas.create_line(x_position, self.grid_reference_y,
+                                x_position, self.y_end,
+                                fill=self.display.colour, width=3)
 
-    def draw_thin_horizontal_line(self, y_position):
-        self.canvas.create_line(self.left_edge, y_position,
-                                self.right_edge, y_position,
-                                fill=self.foreground_colour)
+    def draw_horizontal_lines(self):
+        for row_index in range(self.problem.height + 1):
+            y_position = self.grid_reference_y + int(row_index * self.cell_size)
+            self.draw_horizontal_line(y_position)
 
-    def draw_thin_lines_vertical(self):
-        line_positions = np.arange(self.nonogram.size + 1)
-        for line_position in line_positions:
-            x_position = self.left_edge + line_position * self.cell_size
-            self.draw_thin_vertical_line(x_position)
+    def draw_horizontal_line(self, y_position):
+        self.canvas.create_line(self.grid_reference_x, y_position,
+                                self.x_end, y_position,
+                                fill=self.display.colour, width=3)
 
-    def draw_thin_vertical_line(self, x_position):
-        self.canvas.create_line(x_position, self.top_edge,
-                                x_position, self.bottom_edge,
-                                fill=self.foreground_colour)
+defaults.load(Grid)

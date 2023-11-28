@@ -1,0 +1,8 @@
+{
+    "window_size": "full",
+    "window_buffer_x_ratio": 0.05,
+    "window_buffer_y_ratio": 0.05,
+    "colour": "dark",
+    "font_style": "Calibri",
+    "text_ratio": 0.7
+}
