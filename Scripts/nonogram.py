@@ -113,6 +113,7 @@ class Nonogram():
         for row_index, data in enumerate(self.row_data):
             column = Column(self, row_index, data)
             self.columns.append(column)
+        self.update_lines(self.columns)
 
     def update_lines(self, lines):
         for line in lines:
