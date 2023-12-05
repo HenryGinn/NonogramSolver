@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import time
 
 from hgutilities import defaults
 import numpy as np
@@ -95,10 +96,13 @@ class Nonogram():
         self.display_obj.update()
 
     def solve(self):
-        self.iterate()
-        self.update_display()
+        self.initialise()
+        for iteration in range(3):
+            self.iterate()
+            self.update_display()
 
-    def iterate(self):
+    def initialise(self):
+        self.continue_iterating = True
         self.rows, self.columns = [], []
         self.initialise_rows()
         self.initialise_columns()
@@ -107,17 +111,19 @@ class Nonogram():
         for row_index, data in enumerate(self.row_data):
             row = Row(self, row_index, data)
             self.rows.append(row)
-        self.update_lines(self.rows)
 
     def initialise_columns(self):
         for row_index, data in enumerate(self.row_data):
             column = Column(self, row_index, data)
             self.columns.append(column)
+
+    def iterate(self):
+        self.update_lines(self.rows)
         self.update_lines(self.columns)
 
     def update_lines(self, lines):
         for line in lines:
             line.update()
-
+            input()
 
 defaults.load(Nonogram)

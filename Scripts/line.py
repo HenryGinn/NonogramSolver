@@ -15,6 +15,11 @@ contiguous section must be separated by the other contiguous sections
 by at least one square and therefore the slack is reduced. The addition
 of one is to account for an offset caused by the cause of a single
 contiguous region that does not restrict the slack.
+
+If a collection has a cell included where the grid has the cell
+discluded then that collection of cells is invalid. This means we need
+both the grid disclusion value to be true and the cell included value
+to be true (AND gate).
 """
 
 
@@ -69,19 +74,43 @@ class Line():
         self.collections.append(collection)
 
     def update(self):
+        self.filter_collections()
         cells = np.stack([collection.cells for collection in self.collections])
-        grid_line = self.get_grid_line()
-        self.update_inclusion(cells, grid_line)
-        self.update_disclusion(cells, grid_line)
+        self.update_inclusion(cells)
+        self.update_disclusion(cells)
 
-    def update_inclusion(self, cells, grid_line):
+    def filter_collections(self):
+        self.collections = [collection for collection in self.collections
+                            if self.collection_valid(collection)]
+
+    def collection_valid(self, collection):
+        valid_included = self.get_collection_valid_included(collection)
+        valid_discluded = True#self.get_collection_valid_discluded(collection)
+        return (valid_included and valid_discluded)
+        
+    def get_collection_valid_included(self, collection):
+        grid_line_discluded = self.get_grid_line_discluded()
+        cells = collection.cells
+        invalid = np.any(np.logical_and(grid_line_discluded, cells))
+        print(self.direction, self.index, grid_line_discluded, cells, invalid)
+        return not invalid
+        
+    def get_collection_valid_discluded(self, collection):
+        grid_line_discluded = self.get_grid_line_discluded()
+        cells = np.logical_not(collection.cells)
+        invalid = np.any(np.logical_xor(grid_line_discluded, cells))
+        return not invalid
+
+    def update_inclusion(self, cells):
+        grid_line_included = self.get_grid_line_included()
         included = np.all(cells, axis=0)
-        new_included = np.logical_xor(included, grid_line)
+        new_included = np.logical_xor(included, grid_line_included)
         updating_indexes_included = np.where(new_included)
         self.update_grid_included(updating_indexes_included)
 
-    def update_disclusion(self, cells, grid_line):
+    def update_disclusion(self, cells):
+        grid_line_discluded = self.get_grid_line_discluded()
         discluded = np.all(np.logical_not(cells), axis=0)
-        new_discluded = np.logical_xor(discluded, grid_line)
+        new_discluded = np.logical_xor(discluded, grid_line_discluded)
         updating_indexes_discluded = np.where(new_discluded)
         self.update_grid_discluded(updating_indexes_discluded)
