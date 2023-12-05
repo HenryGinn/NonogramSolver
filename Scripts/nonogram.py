@@ -3,10 +3,13 @@ import os
 import json
 
 from hgutilities import defaults
+import numpy as np
 
 from user_nonogram import UserNonogram
 from problem import Problem
 from display.display import Display
+from row import Row
+from column import Column
 
 
 class Nonogram():
@@ -63,6 +66,7 @@ class Nonogram():
     def set_problem_from_path(self):
         self.set_problem_dict_from_path()
         self.set_dimensions()
+        self.set_grid_data()
         self.set_line_data()
 
     def set_problem_dict_from_path(self):
@@ -75,6 +79,10 @@ class Nonogram():
         self.height = dimensions["Height"]
         self.size = max(self.width, self.height)
 
+    def set_grid_data(self):
+        self.grid_included = np.ones((self.width, self.height)) * False
+        self.grid_discluded = np.ones((self.width, self.height)) * False
+
     def set_line_data(self):
         self.row_data = self.problem_dict["Row data"]
         self.column_data = self.problem_dict["Column data"]
@@ -82,5 +90,33 @@ class Nonogram():
     def draw(self):
         self.display_obj = Display(self)
         self.display_obj.display(self.kwargs)
+
+    def update_display(self):
+        self.display_obj.update()
+
+    def solve(self):
+        self.iterate()
+        self.update_display()
+
+    def iterate(self):
+        self.rows, self.columns = [], []
+        self.initialise_rows()
+        self.initialise_columns()
+        
+    def initialise_rows(self):
+        for row_index, data in enumerate(self.row_data):
+            row = Row(self, row_index, data)
+            self.rows.append(row)
+        self.update_lines(self.rows)
+
+    def initialise_columns(self):
+        for row_index, data in enumerate(self.row_data):
+            column = Column(self, row_index, data)
+            self.columns.append(column)
+
+    def update_lines(self, lines):
+        for line in lines:
+            line.update()
+
 
 defaults.load(Nonogram)

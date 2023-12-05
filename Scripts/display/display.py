@@ -1,13 +1,15 @@
 import tkinter as tk
+import numpy as np
 
 from display.display_settings import DisplaySettings
 from display.grid import Grid
 
 class Display():
 
-    def __init__(self, problem):
-        self.problem = problem
+    def __init__(self, nonogram):
+        self.nonogram = nonogram
         self.window_initialised = False
+        self.set_undrawn_cells()
 
     def display(self, kwargs):
         self.initialise_window(kwargs)
@@ -46,5 +48,40 @@ class Display():
         self.canvas.pack()
         
     def draw_grid_and_labels(self):
-        grid_and_labels = Grid(self)
-        grid_and_labels.draw_grid_and_labels()
+        self.grid = Grid(self)
+        self.grid.draw_grid_and_labels()
+        self.grid.set_cells_corners()
+
+    def set_undrawn_cells(self):
+        self.undrawn_cells = np.ones((self.nonogram.width,
+                                      self.nonogram.height)
+                                     ) * True
+
+
+    def update(self):
+        self.update_inclusion()
+        self.update_disclusion()
+
+    def update_inclusion(self):
+        cells_to_include = self.get_cells_to_include()
+        for x, y in zip(*cells_to_include):
+            self.undrawn_cells[x, y] = False
+            self.grid.include_cell(x, y)
+
+    def get_cells_to_include(self):
+        undrawn_to_include = np.logical_and(self.undrawn_cells,
+                                            self.nonogram.grid_included)
+        cells_to_include = np.where(undrawn_to_include)
+        return cells_to_include
+
+    def update_disclusion(self):
+        cells_to_disclude = self.get_cells_to_disclude()
+        for x, y in zip(*cells_to_disclude):
+            self.undrawn_cells[x, y] = False
+            self.grid.disclude_cell(x, y)
+
+    def get_cells_to_disclude(self):
+        undrawn_to_disclude = np.logical_and(self.undrawn_cells,
+                                             self.nonogram.grid_discluded)
+        cells_to_disclude = np.where(undrawn_to_disclude)
+        return cells_to_disclude
