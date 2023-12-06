@@ -113,8 +113,8 @@ class Nonogram():
             self.rows.append(row)
 
     def initialise_columns(self):
-        for row_index, data in enumerate(self.row_data):
-            column = Column(self, row_index, data)
+        for column_index, data in enumerate(self.column_data):
+            column = Column(self, column_index, data)
             self.columns.append(column)
 
     def iterate(self):
@@ -124,6 +124,5 @@ class Nonogram():
     def update_lines(self, lines):
         for line in lines:
             line.update()
-            input()
 
 defaults.load(Nonogram)

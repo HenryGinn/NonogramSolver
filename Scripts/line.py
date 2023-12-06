@@ -19,7 +19,9 @@ contiguous region that does not restrict the slack.
 If a collection has a cell included where the grid has the cell
 discluded then that collection of cells is invalid. This means we need
 both the grid disclusion value to be true and the cell included value
-to be true (AND gate).
+to be true (AND gate). If a collection has a cell discluded where the
+grid has a cell included then that collection is invalid. This is an
+AND between the collection discluded and the grid included.
 """
 
 
@@ -75,7 +77,7 @@ class Line():
 
     def update(self):
         self.filter_collections()
-        cells = np.stack([collection.cells for collection in self.collections])
+        cells = self.get_cells()
         self.update_inclusion(cells)
         self.update_disclusion(cells)
 
@@ -85,21 +87,35 @@ class Line():
 
     def collection_valid(self, collection):
         valid_included = self.get_collection_valid_included(collection)
-        valid_discluded = True#self.get_collection_valid_discluded(collection)
+        valid_discluded = self.get_collection_valid_discluded(collection)
         return (valid_included and valid_discluded)
         
     def get_collection_valid_included(self, collection):
         grid_line_discluded = self.get_grid_line_discluded()
         cells = collection.cells
         invalid = np.any(np.logical_and(grid_line_discluded, cells))
-        print(self.direction, self.index, grid_line_discluded, cells, invalid)
         return not invalid
         
     def get_collection_valid_discluded(self, collection):
-        grid_line_discluded = self.get_grid_line_discluded()
+        grid_line_included = self.get_grid_line_included()
         cells = np.logical_not(collection.cells)
-        invalid = np.any(np.logical_xor(grid_line_discluded, cells))
+        invalid = np.any(np.logical_and(grid_line_included, cells))
         return not invalid
+
+    def get_cells(self):
+        if len(self.collections) != 0:
+            return self.get_cells_valid()
+        else:
+            self.no_valid_collections_error()
+
+    def get_cells_valid(self):
+        cells = np.stack([collection.cells
+                          for collection in self.collections])
+        return cells
+
+    def no_valid_collections_error(self):
+        raise ValueError(f"All combinations for {self.direction.lower()} "
+                         f"{self.index + 1} were ruled out.")
 
     def update_inclusion(self, cells):
         grid_line_included = self.get_grid_line_included()
