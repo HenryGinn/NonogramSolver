@@ -17,6 +17,14 @@ class Column(Line):
 
     def update_grid_included(self, updating_indexes):
         self.nonogram.grid_included[updating_indexes, self.index] = True
+        self.update_message(updating_indexes, "include")
 
     def update_grid_discluded(self, updating_indexes):
         self.nonogram.grid_discluded[updating_indexes, self.index] = True
+        self.update_message(updating_indexes, "disclude")
+
+    def update_message(self, indices, state):
+        print(f"\nBy considering column {self.index + 1} we could "
+              f"{state} the following cells:")
+        for index in indices[0]:
+            print(f"Row: {index + 1}    Column: {self.index + 1}")

@@ -7,7 +7,6 @@ from hgutilities import defaults
 import numpy as np
 
 from user_nonogram import UserNonogram
-from problem import Problem
 from display.display import Display
 from row import Row
 from column import Column
@@ -17,7 +16,6 @@ class Nonogram():
 
     def __init__(self, *args, **kwargs):
         self.args_and_kwargs(*args, **kwargs)
-        self.problem = Problem(self)
         self.set_problem()
         self.draw()
 
@@ -97,15 +95,18 @@ class Nonogram():
 
     def solve(self):
         self.initialise()
-        for iteration in range(3):
+        while self.continue_iterating:
             self.iterate()
-            self.update_display()
 
     def initialise(self):
-        self.continue_iterating = True
+        self.initialise_iteration_variables()
         self.rows, self.columns = [], []
         self.initialise_rows()
         self.initialise_columns()
+
+    def initialise_iteration_variables(self):
+        self.continue_iterating = True
+        self.changes_made = False
         
     def initialise_rows(self):
         for row_index, data in enumerate(self.row_data):
@@ -118,11 +119,20 @@ class Nonogram():
             self.columns.append(column)
 
     def iterate(self):
+        self.continue_iterating = False
         self.update_lines(self.rows)
         self.update_lines(self.columns)
 
     def update_lines(self, lines):
         for line in lines:
             line.update()
+            self.update_output_if_necessary()
+
+    def update_output_if_necessary(self):
+        if self.changes_made:
+            self.changes_made = False
+            self.continue_iterating = True
+            self.update_display()
+        
 
 defaults.load(Nonogram)

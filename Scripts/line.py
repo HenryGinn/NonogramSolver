@@ -122,11 +122,21 @@ class Line():
         included = np.all(cells, axis=0)
         new_included = np.logical_xor(included, grid_line_included)
         updating_indexes_included = np.where(new_included)
-        self.update_grid_included(updating_indexes_included)
+        self.potential_update_included(updating_indexes_included)
 
     def update_disclusion(self, cells):
         grid_line_discluded = self.get_grid_line_discluded()
         discluded = np.all(np.logical_not(cells), axis=0)
         new_discluded = np.logical_xor(discluded, grid_line_discluded)
         updating_indexes_discluded = np.where(new_discluded)
-        self.update_grid_discluded(updating_indexes_discluded)
+        self.potential_update_discluded(updating_indexes_discluded)
+
+    def potential_update_included(self, updating_indexes):
+        if len(updating_indexes[0]) != 0:
+            self.update_grid_included(updating_indexes)
+            self.nonogram.changes_made = True
+
+    def potential_update_discluded(self, updating_indexes):
+        if len(updating_indexes[0]) != 0:
+            self.update_grid_discluded(updating_indexes)
+            self.nonogram.changes_made = True
