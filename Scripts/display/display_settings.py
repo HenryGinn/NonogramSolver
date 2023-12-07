@@ -13,10 +13,10 @@ class DisplaySettings():
         self.process_font_kwargs()
 
     def process_window_size_kwargs(self):
-        if "size" in self.kwargs:
-            if self.kwargs["size"] == "half":
-                self.kwargs["size"] = "half_x"
-            self.window_size = self.kwargs["size"]
+        if "window_size" in self.kwargs:
+            if self.kwargs["window_size"] == "half":
+                self.kwargs["window_size"] = "half_x"
+            self.window_size = self.kwargs["window_size"]
         self.set_window_size()
 
     def set_window_size(self):

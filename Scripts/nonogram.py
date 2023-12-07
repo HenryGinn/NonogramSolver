@@ -16,6 +16,7 @@ class Nonogram():
 
     def __init__(self, *args, **kwargs):
         self.args_and_kwargs(*args, **kwargs)
+        self.set_paths()
         self.set_problem()
         self.draw()
 
@@ -27,6 +28,11 @@ class Nonogram():
     def process_args(self, args):
         if len(args) == 1:
             self.path_input = args[0]
+
+    def set_paths(self):
+        script_path = sys.path[0]
+        repository_path = os.path.split(script_path)[0]
+        self.problems_path = os.path.join(repository_path, "Puzzles")
 
     def set_problem(self):
         self.data_file_input()
@@ -45,9 +51,6 @@ class Nonogram():
             self.set_path_from_file_name()
 
     def set_path_from_file_name(self):
-        script_path = sys.path[0]
-        repository_path = os.path.split(script_path)[0]
-        self.problems_path = os.path.join(repository_path, "Puzzles")
         self.path = os.path.join(self.problems_path, self.path_input)
         self.verify_valid_path()
 
