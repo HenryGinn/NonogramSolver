@@ -52,12 +52,29 @@ class UserNonogram():
 
     def get_line_data(self, line_type, index):
         prompt = f"{line_type} {index + 1}: "
-        data_input = str(input(prompt))
-        line_data = [int(number) for number in data_input.split(" ")]
-        return line_data
+        while True:
+            try:
+                data_input = str(input(prompt))
+                line_data = [int(number) for number in data_input.split(" ")]
+                return line_data
+            except:
+                print("Fail, try again")
 
     def add_existing_cells(self):
-        self.existing_cells = []
+        prompt = "Please enter how many cells are already included"
+        existing_cell_count = get_int_input(prompt, lower_bound=0)
+        self.existing_cells = [self.get_cell(cell_index)
+                               for cell_index in range(existing_cell_count)]
+
+    def get_cell(self, cell_index):
+        prompt = f"Cell {cell_index + 1}: "
+        while True:
+            try:
+                cell_input = str(input(prompt))
+                cell = [int(number) - 1 for number in cell_input.split(" ")]
+                return cell
+            except:
+                print("Fail, try again")
 
     def save_puzzle_data(self):
         self.construct_data_dict()
@@ -81,5 +98,5 @@ class UserNonogram():
         self.data_dict.update(line_data)
 
     def collect_existing_cells(self):
-        existing_cells = {"Existing cells": self.existing_cells}
+        existing_cells = {"Existing cells included": self.existing_cells}
         self.data_dict.update(existing_cells)

@@ -82,8 +82,14 @@ class Nonogram():
         self.size = max(self.width, self.height)
 
     def set_grid_data(self):
-        self.grid_included = np.ones((self.width, self.height)) * False
+        self.set_grid_included()
         self.grid_discluded = np.ones((self.width, self.height)) * False
+
+    def set_grid_included(self):
+        self.grid_included = np.ones((self.width, self.height)) * False
+        included_x, included_y = zip(*self.problem_dict["Existing cells included"])
+        included_x, included_y = np.array(included_x), np.array(included_y)
+        self.grid_included[included_x, included_y] = True
 
     def set_line_data(self):
         self.row_data = self.problem_dict["Row data"]
