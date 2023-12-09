@@ -104,6 +104,7 @@ class Grid():
 
     def draw_row_labels(self):
         for row_index, label in enumerate(self.nonogram.row_data):
+            label = "  ".join([str(number) for number in label])
             self.draw_row_label(row_index, label)
 
     def draw_row_label(self, index, label):
@@ -126,8 +127,9 @@ class Grid():
                                 anchor="w", **self.display.font_kwargs)
 
     def draw_grid(self):
-        self.draw_vertical_lines()
-        self.draw_horizontal_lines()
+        if self.display.show_lines:
+            self.draw_vertical_lines()
+            self.draw_horizontal_lines()
 
     def draw_vertical_lines(self):
         for column_index in range(self.nonogram.width + 1):
@@ -137,7 +139,8 @@ class Grid():
     def draw_vertical_line(self, x_position):
         self.canvas.create_line(x_position, self.grid_reference_y,
                                 x_position, self.y_end,
-                                fill=self.display.colour, width=3)
+                                fill=self.display.colour,
+                                width=self.display.line_width)
 
     def draw_horizontal_lines(self):
         for row_index in range(self.nonogram.height + 1):
@@ -147,7 +150,8 @@ class Grid():
     def draw_horizontal_line(self, y_position):
         self.canvas.create_line(self.grid_reference_x, y_position,
                                 self.x_end, y_position,
-                                fill=self.display.colour, width=3)
+                                fill=self.display.colour,
+                                width=self.display.line_width)
 
     def set_cells_corners(self):
         self.set_cells_corners_1()
@@ -184,19 +188,20 @@ class Grid():
                                      outline=self.display.colour)
 
     def disclude_cell(self, x, y):
-        self.draw_cross_positive(x, y)
-        self.draw_cross_negative(x, y)
+        if self.display.show_discluded:
+            self.draw_cross_positive(x, y)
+            self.draw_cross_negative(x, y)
 
     def draw_cross_positive(self, x, y):
         cell_corners = self.cells_corners_1[x][y]
         self.canvas.create_line(*cell_corners,
                                 fill=self.display.colour,
-                                width=3)
+                                width=self.display.line_width)
 
     def draw_cross_negative(self, x, y):
         cell_corners = self.cells_corners_2[x][y]
         self.canvas.create_line(*cell_corners,
                                 fill=self.display.colour,
-                                width=3)
+                                width=self.display.line_width)
 
 defaults.load(Grid)

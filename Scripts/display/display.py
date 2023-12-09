@@ -1,5 +1,7 @@
 import tkinter as tk
+
 import numpy as np
+from hgutilities import defaults
 
 from display.display_settings import DisplaySettings
 from display.grid import Grid
@@ -12,6 +14,7 @@ class Display():
         self.set_undrawn_cells()
 
     def display(self, kwargs):
+        defaults.kwargs(self, kwargs)
         self.initialise_window(kwargs)
 
     def initialise_window(self, kwargs):
@@ -85,3 +88,5 @@ class Display():
                                              self.nonogram.grid_discluded)
         cells_to_disclude = np.where(undrawn_to_disclude)
         return cells_to_disclude
+
+defaults.load(Display)

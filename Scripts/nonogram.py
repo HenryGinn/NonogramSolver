@@ -87,6 +87,10 @@ class Nonogram():
 
     def set_grid_included(self):
         self.grid_included = np.ones((self.width, self.height)) * False
+        if len(self.problem_dict["Existing cells included"]) != 0:
+            self.add_existing_included_cells()
+
+    def add_existing_included_cells(self):
         included_x, included_y = zip(*self.problem_dict["Existing cells included"])
         included_x, included_y = np.array(included_x), np.array(included_y)
         self.grid_included[included_x, included_y] = True
